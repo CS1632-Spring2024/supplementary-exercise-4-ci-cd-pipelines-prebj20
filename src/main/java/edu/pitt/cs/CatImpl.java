@@ -1,5 +1,6 @@
 package edu.pitt.cs;
 
+import java.util.TreeSet;
 
 public class CatImpl implements Cat {
 
@@ -84,7 +85,7 @@ public class CatImpl implements Cat {
 
 	public String toString() {
 		// TODO: Fill in
-		return this.id + ". " + this.name;
+		return "ID " + this.id + ". " + this.name;
 	}
 
 }

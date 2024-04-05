@@ -82,7 +82,7 @@ public class RentACatImpl implements RentACat {
 		// TODO: Fill in
 		String cats_String = "";
 		for (Cat cat : cats) {
-			cats_String += cat.toString() + " ";
+			cats_String += cat.toString() + "\n";
 		}
 		return cats_String;
 	}
