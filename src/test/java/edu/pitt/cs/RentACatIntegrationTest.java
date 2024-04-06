@@ -5,6 +5,8 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import org.junit.After;
 import org.junit.Before;
@@ -35,28 +37,31 @@ public class RentACatIntegrationTest {
 	@Before
 	public void setUp() throws Exception {
 		// INITIALIZE THE TEST FIXTURE
-
+		
 		// 1. Create a new RentACat object and assign to r using a call to RentACat.createInstance(InstanceType).
 		// Passing InstanceType.IMPL as the first parameter will create a real RentACat object using your RentACatImpl implementation.
 		// Passing InstanceType.MOCK as the first parameter will create a mock RentACat object using Mockito.
 		// Which type is the correct choice for this integration test?  I'll leave it up to you.  The answer is in the Unit Testing Part 2 lecture. :)
 		// TODO: Fill in
-
+		r = RentACat.createInstance(InstanceType.IMPL);
 		// 2. Create a Cat with ID 1 and name "Jennyanydots", assign to c1 using a call to Cat.createInstance(InstanceType, int, String).
 		// Passing InstanceType.IMPL as the first parameter will create a real cat using your CatImpl implementation.
 		// Passing InstanceType.MOCK as the first parameter will create a mock cat using Mockito.
 		// Which type is the correct choice for this integration test?  Again, I'll leave it up to you.
 		// TODO: Fill in
-
+		c1 = Cat.createInstance(InstanceType.IMPL, 1, "Jennyanydots");
 		// 3. Create a Cat with ID 2 and name "Old Deuteronomy", assign to c2 using a call to Cat.createInstance(InstanceType, int, String).
 		// TODO: Fill in
-
+		c2 = Cat.createInstance(InstanceType.IMPL, 2, "Old Deuteronomy");
 		// 4. Create a Cat with ID 3 and name "Mistoffelees", assign to c3 using a call to Cat.createInstance(InstanceType, int, String).
 		// TODO: Fill in
+		c3 = Cat.createInstance(InstanceType.IMPL, 3, "Mistoffelees");
 		
 		// 5. Redirect system output from stdout to the "out" stream
 		// First, make a back up of System.out (which is the stdout to the console)
+		out = new ByteArrayOutputStream();
 		stdout = System.out;
+		System.setOut(new PrintStream(out));
 		// Second, update System.out to the PrintStream created from "out"
 		// TODO: Fill in.  Refer to the textbook chapter 14.6 on Testing System Output.
 	}
@@ -88,10 +93,22 @@ public class RentACatIntegrationTest {
 	 * method. efer to the Unit Testing Part 1 lecture and the textbook appendix 
 	 * hapter on using reflection on how to do this.  Please use r.getClass() to get
 	 * the class object of r instead of hardcoding it as RentACatImpl.
+	 * @throws SecurityException 
+	 * @throws NoSuchMethodException 
+	 * @throws InvocationTargetException 
+	 * @throws IllegalAccessException 
 	 */
 	@Test
-	public void testGetCatNullNumCats0() {
-		// TODO: Fill in
+	public void testGetCatNullNumCats0() throws NoSuchMethodException, SecurityException, IllegalAccessException, InvocationTargetException {
+		// Using Java Reflection to access the private method 'getCat'
+		Method getCatMethod = RentACat.class.getDeclaredMethod("getCat", int.class);
+		getCatMethod.setAccessible(true);
+
+		// Invoke the 'getCat' method with a non-existing cat ID
+		Cat cat = (Cat) getCatMethod.invoke(r, 2);
+
+		assertNull("Should return null for non-existing cat ID", cat);
+		assertEquals("Invalid cat ID." + newline, out.toString());
 	}
 
 	/**
@@ -108,10 +125,26 @@ public class RentACatIntegrationTest {
 	 * method. efer to the Unit Testing Part 1 lecture and the textbook appendix 
 	 * hapter on using reflection on how to do this.  Please use r.getClass() to get
 	 * the class object of r instead of hardcoding it as RentACatImpl.
+	 * @throws SecurityException 
+	 * @throws NoSuchMethodException 
+	 * @throws InvocationTargetException 
+	 * @throws IllegalAccessException 
 	 */
 	@Test
-	public void testGetCatNumCats3() {
-		// TODO: Fill in
+	public void testGetCatNumCats3() throws NoSuchMethodException, SecurityException, IllegalAccessException, InvocationTargetException {
+		r.addCat(c1);
+		r.addCat(c2);
+		r.addCat(c3);
+
+		// Java Reflection access the private method
+		Method getCatMethod = RentACat.class.getDeclaredMethod("getCat", int.class);
+		getCatMethod.setAccessible(true);
+
+		// Invoke the private method
+		Cat cat = (Cat) getCatMethod.invoke(r, 2);
+
+		assertNotNull("Should return a cat object for existing ID", cat);
+		assertEquals("Returned cat should have ID 2", 2, cat.getId());
 	}
 
 	/**
@@ -125,7 +158,7 @@ public class RentACatIntegrationTest {
 	 */
 	@Test
 	public void testListCatsNumCats0() {
-		// TODO: Fill in
+		assertEquals("Should return an empty string when no cats are available", "", r.listCats());
 	}
 
 	/**
@@ -140,7 +173,13 @@ public class RentACatIntegrationTest {
 	 */
 	@Test
 	public void testListCatsNumCats3() {
-		// TODO: Fill in
+		r.addCat(c1);
+		r.addCat(c2);
+		r.addCat(c3);
+		String expectedOutput = "ID 1. Jennyanydots" + newline +
+				"ID 2. Old Deuteronomy" + newline +
+				"ID 3. Mistoffelees" + newline;
+		assertEquals(expectedOutput, r.listCats());
 	}
 
 	/**
@@ -156,7 +195,8 @@ public class RentACatIntegrationTest {
 	 */
 	@Test
 	public void testRenameFailureNumCats0() {
-		// TODO: Fill in
+		assertFalse("Should return false when trying to rename non-existing cat", r.renameCat(2, "Garfield"));
+		assertEquals("Invalid cat ID." + newline, out.toString());
 	}
 
 	/**
@@ -168,10 +208,26 @@ public class RentACatIntegrationTest {
 	 * Postconditions: Return value is true.
 	 *                 c2 is renamed to "Garfield".
 	 * </pre>
+	 * @throws SecurityException 
+	 * @throws NoSuchMethodException 
+	 * @throws InvocationTargetException 
+	 * @throws IllegalAccessException 
 	 */
 	@Test
-	public void testRenameNumCat3() {
-		// TODO: Fill in
+	public void testRenameNumCat3() throws NoSuchMethodException, SecurityException, IllegalAccessException, InvocationTargetException {
+		r.addCat(c1);
+		r.addCat(c2);
+		r.addCat(c3);
+		assertTrue("Should return true when renaming an existing cat", r.renameCat(2, "Garfield"));
+
+		// Using Java Reflection to access the private method 'getCat'
+		Method getCatMethod = RentACat.class.getDeclaredMethod("getCat", int.class);
+		getCatMethod.setAccessible(true);
+
+		// Invoke the 'getCat' method with the cat ID 2
+		Cat cat = (Cat) getCatMethod.invoke(r, 2);
+
+		assertEquals("Garfield", cat.getName());
 	}
 
 	/**
@@ -187,7 +243,11 @@ public class RentACatIntegrationTest {
 	 */
 	@Test
 	public void testRentCatNumCats3() {
-		// TODO: Fill in
+		r.addCat(c1);
+		r.addCat(c2);
+		r.addCat(c3);
+		assertTrue("Should return true when cat is successfully rented", r.rentCat(2));
+		assertEquals("Old Deuteronomy has been rented." + newline, out.toString());
 	}
 
 	/**
@@ -204,7 +264,12 @@ public class RentACatIntegrationTest {
 	 */
 	@Test
 	public void testRentCatFailureNumCats3() {
-		// TODO: Fill in
+		r.addCat(c1);
+		r.addCat(c2);
+		r.addCat(c3);
+		r.rentCat(2); // Rent the cat first
+		assertFalse("Should return false when trying to rent an already rented cat", r.rentCat(2));
+		assertEquals("Sorry, Old Deuteronomy is not here!" + newline, out.toString());
 	}
 
 	/**
@@ -221,7 +286,12 @@ public class RentACatIntegrationTest {
 	 */
 	@Test
 	public void testReturnCatNumCats3() {
-		// TODO: Fill in
+		r.addCat(c1);
+		r.addCat(c2);
+		r.addCat(c3);
+		r.rentCat(2); // Rent the cat first
+		assertTrue("Should return true when cat is successfully returned", r.returnCat(2));
+		assertEquals("Welcome back, Old Deuteronomy!" + newline, out.toString());
 	}
 
 	/**
@@ -237,7 +307,11 @@ public class RentACatIntegrationTest {
 	 */
 	@Test
 	public void testReturnFailureCatNumCats3() {
-		// TODO: Fill in
+		r.addCat(c1);
+		r.addCat(c2);
+		r.addCat(c3);
+		assertFalse("Should return false when trying to return a cat that is not rented", r.returnCat(2));
+		assertEquals("Old Deuteronomy is already here!" + newline, out.toString());
 	}
 
 }
